@@ -2,6 +2,7 @@
 
 Este incremento implementa cadastro, login e consulta do usuario autenticado, sem avancar nos CRUDs academicos ou no compartilhamento de materiais.
 O UnescShare continua sendo um catalogo BitTorrent, sem hospedagem de conteudo academico.
+O incremento seguinte de instituicoes ja utiliza essa autenticacao; consulte [INSTITUICOES.md](INSTITUICOES.md) para contrato e permissoes aprovadas.
 
 ## Decisoes e limitacoes
 
@@ -16,7 +17,7 @@ O UnescShare continua sendo um catalogo BitTorrent, sem hospedagem de conteudo a
 - `STATELESS`, sem sessao HTTP, cookie de autenticacao, Basic ou formulario de login. Tokens na query ou em cookies nao sao aceitos.
 - CSRF desativado porque as credenciais nao sao enviadas automaticamente por cookies/Basic. Essa decisao precisa ser revista se o mecanismo mudar. CORS nao substitui autenticacao e autorizacao.
 - Frontend deve enviar o token no header `Authorization`; preferir armazenamento em memoria neste prototipo. Uso fora de localhost requer HTTPS.
-- Rate limiting, recuperacao de senha, usuarios administrativos iniciais e revogacao ainda nao foram implementados. Nao considerar este incremento suficiente para disponibilizacao publica em producao.
+- Rate limiting, recuperacao de senha e revogacao ainda nao foram implementados. O administrador inicial de desenvolvimento foi adicionado em um incremento separado, descrito em [ADMINISTRADOR_INICIAL.md](ADMINISTRADOR_INICIAL.md). Nao considerar estes incrementos suficientes para disponibilizacao publica em producao.
 
 ## Estrutura dos arquivos
 

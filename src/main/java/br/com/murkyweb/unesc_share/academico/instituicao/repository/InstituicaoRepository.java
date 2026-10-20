@@ -14,4 +14,8 @@ public interface InstituicaoRepository extends JpaRepository<Instituicao, UUID> 
 	boolean existsByNomeIgnoreCase(String nome);
 
 	boolean existsBySiglaIgnoreCase(String sigla);
+
+	boolean existsByNomeIgnoreCaseAndIdNot(String nome, UUID id);
+
+	boolean existsBySiglaIgnoreCaseAndIdNot(String sigla, UUID id);
 }

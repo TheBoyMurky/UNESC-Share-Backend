@@ -63,6 +63,11 @@ public class SecurityConfig {
 						// Matchers sao relativos ao context-path /api/v1.
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 						.requestMatchers(HttpMethod.POST, "/auth/cadastro", "/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/instituicoes", "/instituicoes/**", "/cursos", "/cursos/**",
+								"/disciplinas", "/disciplinas/**")
+								.hasRole("ADMINISTRADOR")
+						.requestMatchers(HttpMethod.PUT, "/instituicoes/**", "/cursos/**", "/disciplinas/**").hasRole("ADMINISTRADOR")
+						.requestMatchers(HttpMethod.DELETE, "/instituicoes/**", "/cursos/**", "/disciplinas/**").hasRole("ADMINISTRADOR")
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(resource -> resource.jwt(jwt -> jwt
 						.jwtAuthenticationConverter(jwtAuthenticationConverter())))

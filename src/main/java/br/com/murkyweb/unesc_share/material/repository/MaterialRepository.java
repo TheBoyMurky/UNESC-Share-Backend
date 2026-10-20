@@ -16,4 +16,6 @@ public interface MaterialRepository
 	Page<Material> findAllByStatus(StatusMaterial status, Pageable pageable);
 
 	Page<Material> findAllByUsuarioId(UUID usuarioId, Pageable pageable);
+
+	boolean existsByDisciplinaId(UUID disciplinaId);
 }

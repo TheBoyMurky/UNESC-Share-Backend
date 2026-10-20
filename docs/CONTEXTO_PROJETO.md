@@ -149,6 +149,19 @@ O backend e organizado por funcionalidade nos pacotes `usuario`, `academico`, `c
 - CORS configurado por ambiente para o frontend separado, sem credenciais por cookie.
 - Testes HTTP de cadastro, login, validade/assinatura/claims JWT, autorizacao por perfil, identidade do usuario e CORS.
 - Perfil `test` com chave exclusiva para testes, sem runner automatico. Valores SQL nao sao registrados em `dev` para proteger hashes e dados pessoais.
+- Primeiro incremento da Etapa 4: CRUD de instituicoes com DTOs, validacao, paginacao nativa e transacoes.
+- Consultas para autenticados; escrita apenas para administradores, protegida por Spring Security e `@PreAuthorize` no service.
+- Exclusao bloqueada quando existem cursos vinculados, com `409 Conflict` e preservacao dos relacionamentos.
+- Validacao em 20/10/2026: `./mvnw clean verify` com 62 testes, sem falhas, erros ou testes ignorados, e JAR executavel gerado. Inclui 21 testes novos de instituicoes; nenhum comando Docker foi executado pelo agente.
+- Provisionamento do administrador inicial apenas em `dev`, com ativacao explicita por `ADMIN_SEED_ENABLED` e nome/email/senha fornecidos por ambiente, sem credenciais padrao.
+- O bootstrap cria conta nova ou preserva administrador existente, sem promover usuario/moderador nem redefinir senha. Validacao compartilhada do cadastro, BCrypt e mensagens sem credenciais.
+- Verificacao mais recente em 20/10/2026: `./mvnw clean verify` passou com 79 testes, sem falhas, erros ou testes ignorados, e JAR gerado. Os 17 testes novos do administrador foram validados tambem isoladamente; contas de integracao revertidas e `.env` real inalterado.
+- Segundo incremento da Etapa 4: CRUD de cursos com instituicao obrigatoria no cadastro, nome verificado por instituicao, filtro institucional, DTOs e paginacao nativa.
+- Nesta entrega, PUT de curso mantem a instituicao; transferencia retorna 409. Exclusao com disciplinas e bloqueada, sem cascata ou alteracao do schema.
+- Validacao mais recente em 20/10/2026: 27 testes novos de cursos aprovados isoladamente e `./mvnw clean verify` com 106 testes sem falhas, erros ou testes ignorados. JAR gerado e backend atualizado reiniciado em localhost:8080, com bootstrap administrativo desativado e zero novas disciplinas criadas.
+- Terceiro incremento da Etapa 4: CRUD de disciplinas com curso obrigatorio, codigo unico por curso e normalizado para maiusculas, DTOs, paginacao nativa e filtro por curso.
+- Edicao preserva curso/UUID/material; exclusao bloqueada por qualquer material vinculado, inclusive REMOVIDO. Nenhuma entidade ou tabela foi alterada nesta entrega.
+- Verificacao mais recente em 20/10/2026: 32 testes novos de disciplinas passaram isoladamente e `./mvnw clean verify` passou com 138 testes, zero falhas/erros/ignorados e JAR gerado. O backend atualizado iniciou em localhost:8080, sem carga administrativa e com zero novas disciplinas na carga academica; os registros reais da Matriz 6 foram preservados.
 
 ### Catalogo academico inicial
 
@@ -174,9 +187,14 @@ O agente pode executar comandos Maven, inclusive iniciar o backend e testar cont
 A revisao da Matriz 6 foi concluida: limpeza manual pelo usuario, carga de 59 disciplinas, segunda inicializacao idempotente e 41 testes aprovados pelo Maven. O agente nao executou comandos Docker.
 Detalhes, transcricao e comparacao estao em `docs/ANALISE_GRADE_6.md`; o procedimento operacional esta em `docs/ATUALIZACAO_MATRIZ_6.md`.
 
-Confirmar a matriz de permissoes e implementar os CRUDs academicos incrementalmente, comecando por instituicoes.
+Aprovada a separacao: a estrutura academica e gerenciada por administradores, enquanto estudantes poderao cadastrar materiais e gerenciar os proprios registros nas etapas futuras. As consultas academicas exigem autenticacao; moderadores nao alteram instituicoes.
+O CRUD de instituicoes foi implementado com bloqueio de exclusao quando houver cursos, conforme aprovado. Contrato e testes em `docs/INSTITUICOES.md`.
+Os CRUDs de cursos e disciplinas foram implementados; contratos e testes em `docs/CURSOS.md` e `docs/DISCIPLINAS.md`. A Etapa 4 possui o nucleo academico completo. A proxima entrega e o CRUD de categorias, preparando materiais. Antes da API de materiais, definir os fluxos de pendencia, propriedade e associacao a Torrent/Magnet. A moderacao sera implementada nas funcionalidades correspondentes, nao nesta entrega.
 O primeiro incremento de autenticacao esta documentado em `docs/AUTENTICACAO.md`.
-O cadastro de usuario administrativo inicial ainda esta pendente; dependera de credenciais por ambiente e runner idempotente restrito a `dev`.
+O runner administrativo idempotente foi implementado: somente `dev` e `ADMIN_SEED_ENABLED=true`, com `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD`. Desativado por padrao, independente do catalogo, sem alteracao de contas existentes.
+Em 20/10/2026, o usuario preencheu o `.env` e solicitou a execucao: o backend iniciou pelo Maven em localhost:8080 e criou o administrador configurado. Foram validados login HTTP 200, perfil ADMINISTRADOR em `/usuarios/me`, listagem de instituicoes HTTP 200 e bloqueio sem token HTTP 401. POST administrativo com corpo vazio retornou 400, sem criar instituicoes. A carga academica informou zero disciplinas criadas. O agente nao alterou o `.env`, nao exibiu credenciais/tokens nem executou Docker. Desativar a flag e retirar credenciais de bootstrap antes das proximas inicializacoes, conforme o guia `docs/ADMINISTRADOR_INICIAL.md`.
+O usuario confirmou depois que concluiu a desativacao/retirada das credenciais de bootstrap. Nao reativar a carga administrativa para testar cursos nem pedir credenciais reais; os testes de CRUD usam transacoes revertidas e tokens exclusivos do perfil test.
+Antes de reiniciar a versao com cursos, o agente confirmou a flag desativada e os campos de credenciais ausentes/vazios sem exibir valores. O backend foi reiniciado sem cadastrar outro administrador. O `.env` nao foi alterado pelo agente e nenhum comando Docker foi executado.
 Rate limiting, recuperacao de senha, refresh token e revogacao individual nao fazem parte deste incremento e deverao ser discutidos em entregas futuras.
 
 O estado `REMOVIDO` de `Material` representa exclusao logica para preservar auditoria e relacionamentos futuros.
