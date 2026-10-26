@@ -6,6 +6,7 @@ target/
 
 ### Application logs and local files ###
 logs/
+data/torrents/
 *.log
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

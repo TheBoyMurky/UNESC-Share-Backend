@@ -13,7 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -49,7 +52,7 @@ import jakarta.servlet.DispatcherType;
 public class SecurityConfig {
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, Environment environment) throws Exception {
 		return http
 				.cors(Customizer.withDefaults())
 				// A API aceita tokens somente no header Authorization, nao em cookies.
@@ -59,16 +62,30 @@ public class SecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(auth -> auth
-						// Matchers sao relativos ao context-path /api/v1.
-						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-						.requestMatchers(HttpMethod.POST, "/auth/cadastro", "/auth/login").permitAll()
-						.requestMatchers(HttpMethod.POST, "/instituicoes", "/instituicoes/**", "/cursos", "/cursos/**",
-								"/disciplinas", "/disciplinas/**")
-								.hasRole("ADMINISTRADOR")
-						.requestMatchers(HttpMethod.PUT, "/instituicoes/**", "/cursos/**", "/disciplinas/**").hasRole("ADMINISTRADOR")
-						.requestMatchers(HttpMethod.DELETE, "/instituicoes/**", "/cursos/**", "/disciplinas/**").hasRole("ADMINISTRADOR")
-						.anyRequest().authenticated())
+				.authorizeHttpRequests(auth -> {
+					// Matchers sao relativos ao context-path /api/v1.
+					auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
+					if (environment.acceptsProfiles(Profiles.of("dev"))) {
+						auth.requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();
+					}
+					auth.requestMatchers(HttpMethod.POST, "/auth/cadastro", "/auth/login").permitAll();
+					auth.requestMatchers("/denuncias/moderacao", "/denuncias/moderacao/**").hasAnyRole("MODERADOR", "ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.GET, "/materiais/moderacao").hasAnyRole("MODERADOR", "ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.GET, "/materiais/*/comentarios/moderacao",
+							"/materiais/*/comentarios/*/historico-moderacao").hasAnyRole("MODERADOR", "ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.POST, "/materiais/*/comentarios/*/ocultacao",
+							"/materiais/*/comentarios/*/reexibicao").hasAnyRole("MODERADOR", "ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.POST, "/materiais/*/publicacao", "/materiais/*/bloqueio")
+							.hasAnyRole("MODERADOR", "ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.POST, "/instituicoes", "/instituicoes/**", "/cursos", "/cursos/**",
+							"/disciplinas", "/disciplinas/**", "/categorias", "/categorias/**")
+							.hasRole("ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.PUT, "/instituicoes/**", "/cursos/**", "/disciplinas/**", "/categorias/**")
+							.hasRole("ADMINISTRADOR");
+					auth.requestMatchers(HttpMethod.DELETE, "/instituicoes/**", "/cursos/**", "/disciplinas/**", "/categorias/**")
+							.hasRole("ADMINISTRADOR");
+					auth.anyRequest().authenticated();
+				})
 				.oauth2ResourceServer(resource -> resource.jwt(jwt -> jwt
 						.jwtAuthenticationConverter(jwtAuthenticationConverter())))
 				.build();
@@ -143,6 +160,8 @@ public class SecurityConfig {
 		configuration.setAllowedOrigins(origins);
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+		// Permite ao frontend ler estes cabecalhos de resposta, sem ampliar origens ou permissoes.
+		configuration.setExposedHeaders(List.of(HttpHeaders.LOCATION, HttpHeaders.CONTENT_DISPOSITION));
 		configuration.setAllowCredentials(false);
 		configuration.setMaxAge(3600L);
 		var source = new UrlBasedCorsConfigurationSource();

@@ -252,6 +252,55 @@ class AutenticacaoTests {
 				.andExpect(status().isForbidden());
 	}
 
+	@Test
+	void corsExpoeSomenteCabecalhosDoContratoMesmoEm401SemCriarSessao() throws Exception {
+		var result = mvc.perform(getApi("/usuarios/me").header(HttpHeaders.ORIGIN, "http://localhost:5173"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"))
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Location, Content-Disposition"))
+				.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS))
+				.andExpect(header().exists(HttpHeaders.WWW_AUTHENTICATE))
+				.andExpect(content().string("")).andReturn();
+		assertNull(result.getRequest().getSession(false));
+		// Sem Origin nao ha exposicao CORS, e a autenticacao continua obrigatoria.
+		mvc.perform(getApi("/usuarios/me")).andExpect(status().isUnauthorized())
+				.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS));
+	}
+
+	@Test
+	void corsExpoeCabecalhosEm403SemLiberarEscritaAdministrativa() throws Exception {
+		String token = assinar(claims(UUID.randomUUID().toString()));
+		mvc.perform(postApi("/instituicoes").header(HttpHeaders.ORIGIN, "http://localhost:5173")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content("{}"))
+				.andExpect(status().isForbidden())
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"))
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Location, Content-Disposition"))
+				.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS));
+	}
+
+	@Test
+	void corsRejeitaOrigemDesconhecidaOuNulaTambemNaRequisicaoEfetiva() throws Exception {
+		for (String origin : List.of("https://origem-desconhecida.example", "null")) {
+			mvc.perform(getApi("/usuarios/me").header(HttpHeaders.ORIGIN, origin))
+					.andExpect(status().isForbidden())
+					.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+					.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS));
+		}
+	}
+
+	@Test
+	void corsNaoAmpliaMetodosOuCabecalhosAceitosNoPreflight() throws Exception {
+		mvc.perform(options("/api/v1/usuarios/me").contextPath("/api/v1").servletPath("/usuarios/me")
+				.header(HttpHeaders.ORIGIN, "http://localhost:5173")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "TRACE"))
+				.andExpect(status().isForbidden());
+		mvc.perform(options("/api/v1/usuarios/me").contextPath("/api/v1").servletPath("/usuarios/me")
+				.header(HttpHeaders.ORIGIN, "http://localhost:5173")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "X-Cabecalho-Nao-Permitido"))
+				.andExpect(status().isForbidden());
+	}
+
 	private String login(String email, String senha) throws Exception {
 		var response = mvc.perform(postApi("/auth/login").content(mapper.writeValueAsString(Map.of(
 				"email", email, "senha", senha))))

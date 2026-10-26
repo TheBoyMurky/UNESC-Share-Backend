@@ -1,5 +1,9 @@
 # CRUD de instituicoes
 
+Atualização frontend26/10/2026: cadastro exclusivo de ADMINISTRADOR integrado, preservando leitura de todos os autenticados. **1166 testes frontend**,21backend focados e2cenários opcionais SpringHTTP/PostgreSQL aprovados, com criação/409/negativos de perfil e limpeza da instituição de teste. Contrato backend inalterado; [código e execução do cadastro](../../UNESC-Share-Frontend/docs/INSTITUICAO_CADASTRO_FRONTEND.md). As entregas anteriores registradas abaixo são históricas.
+
+Frontend integrado em26/10/2026: consulta para os três perfis e cadastro/edição/exclusão para ADMINISTRADOR. O detalhe tem link para consulta paginada dos cursos da instituição. A API/contrato não foram alterados. **1208 testes frontend**, TypeScript/build e **27 Maven de cursos focados no PostgreSQL local** aprovados; frontend HTTP sintético não integra Vue/Spring. Guias: [cursos](../../UNESC-Share-Frontend/docs/CURSOS_CONSULTA_FRONTEND.md), [exclusão](../../UNESC-Share-Frontend/docs/INSTITUICAO_EXCLUSAO_FRONTEND.md), [edição](../../UNESC-Share-Frontend/docs/INSTITUICAO_EDICAO_FRONTEND.md) e [consulta](../../UNESC-Share-Frontend/docs/INSTITUICOES_CONSULTA_FRONTEND.md). Visual/DOM/E2E pendentes sem navegador.
+
 Este incremento inicia a Etapa 4 somente com instituicoes. Nao implementa CRUDs de cursos/disciplinas, cadastro de administrador nem compartilhamento de materiais.
 
 ## Regras aprovadas

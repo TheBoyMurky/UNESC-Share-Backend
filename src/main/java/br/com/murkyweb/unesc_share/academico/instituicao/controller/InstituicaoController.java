@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import br.com.murkyweb.unesc_share.academico.instituicao.dto.InstituicaoRequest;
 import br.com.murkyweb.unesc_share.academico.instituicao.dto.InstituicaoResponse;
 import br.com.murkyweb.unesc_share.academico.instituicao.service.InstituicaoService;
@@ -26,6 +30,8 @@ import jakarta.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/instituicoes")
+@Tag(name = "Instituicoes", description = "Consultas para usuarios autenticados; escrita exclusiva de ADMINISTRADOR.")
+@SecurityRequirement(name = "bearerAuth")
 public class InstituicaoController {
 
 	private final InstituicaoService service;
@@ -60,6 +66,7 @@ public class InstituicaoController {
 	}
 
 	@DeleteMapping("/{id}")
+	@ApiResponse(responseCode = "204", description = "Instituicao excluida.")
 	public ResponseEntity<Void> excluir(@PathVariable UUID id) {
 		service.excluir(id);
 		return ResponseEntity.noContent().build();

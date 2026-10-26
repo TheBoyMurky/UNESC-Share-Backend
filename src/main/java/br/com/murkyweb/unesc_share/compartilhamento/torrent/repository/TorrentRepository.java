@@ -15,4 +15,10 @@ public interface TorrentRepository extends JpaRepository<Torrent, UUID> {
 	Optional<Torrent> findByInfoHashIgnoreCase(String infoHash);
 
 	boolean existsByInfoHashIgnoreCase(String infoHash);
+
+	boolean existsByMaterialId(UUID materialId);
+
+	long countByMaterialId(UUID materialId);
+
+	Optional<Torrent> findByIdAndMaterialId(UUID id, UUID materialId);
 }

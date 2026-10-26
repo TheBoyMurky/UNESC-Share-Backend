@@ -13,9 +13,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.multipart.MultipartException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+	@ExceptionHandler(MultipartException.class)
+	public ProblemDetail handleMultipart(MultipartException exception) {
+		// MaxUploadSizeExceededException usa o handler 413 mais especifico herdado do Spring.
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Requisicao multipart invalida.");
+	}
 
 	@ExceptionHandler(AuthenticationException.class)
 	public ProblemDetail handleAuthentication(AuthenticationException exception) {

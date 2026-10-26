@@ -1,14 +1,13 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: unescshare-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Configure POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Configure POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD in .env}
     ports:
-      - ${POSTGRES_PORT}
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,6 +17,39 @@ services:
       retries: 10
       start_period: 10s
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:?Configure POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Configure POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?Generate and configure JWT_SECRET in .env}
+      JWT_TTL: ${JWT_TTL:-15m}
+      JWT_ISSUER: ${JWT_ISSUER:-unesc-share}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-unesc-share-api}
+      CORS_ALLOWED_ORIGINS: "http://localhost:${FRONTEND_PORT:-5173}"
+      SEED_ENABLED: ${SEED_ENABLED:-true}
+      ADMIN_SEED_ENABLED: ${ADMIN_SEED_ENABLED:-false}
+      ADMIN_NAME: ${ADMIN_NAME:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      TORRENT_STORAGE_DIR: /var/lib/unescshare/torrents
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    volumes:
+      - torrent_storage:/var/lib/unescshare/torrents
+
 volumes:
   postgres_data:
     name: unescshare-postgres-data
+  torrent_storage:
+    name: unescshare-torrent-storage

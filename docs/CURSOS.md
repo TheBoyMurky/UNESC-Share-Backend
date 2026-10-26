@@ -1,5 +1,7 @@
 # CRUD de cursos
 
+Frontend em26/10/2026: consulta paginada para os três perfis, cadastro/edição/exclusão somente ADMINISTRADOR. Edição fixa o vínculo; exclusão por UUID em tela dedicada, confirmação explícita e sucesso estrito204. API preserva409 quando há disciplinas vinculadas, sem cascata. **1260 testes frontend**, TypeScript/build e **27 testes Maven de Curso/PostgreSQL** aprovados. HTTP sintético do frontend não integra Vue/Spring. Guias: [Consulta](../../UNESC-Share-Frontend/docs/CURSOS_CONSULTA_FRONTEND.md), [cadastro](../../UNESC-Share-Frontend/docs/CURSOS_CADASTRO_FRONTEND.md), [edição](../../UNESC-Share-Frontend/docs/CURSOS_EDICAO_FRONTEND.md), [exclusão](../../UNESC-Share-Frontend/docs/CURSOS_EXCLUSAO_FRONTEND.md). Próximo: validação visual/manual no navegador quando disponível, depois CRUD administrativo de disciplinas.
+
 Este incremento continua a Etapa 4, adicionando cursos vinculados a instituicoes. Nao implementa ainda o CRUD de disciplinas, materiais ou mecanismos BitTorrent.
 
 ## Regras e escopo

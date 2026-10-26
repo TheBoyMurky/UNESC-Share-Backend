@@ -147,4 +147,4 @@ Nenhum comando Docker e executado pelo agente. Quando necessario, comandos Docke
 
 ## Proxima entrega
 
-CRUD de categorias, preparando o cadastro de materiais. Depois, definir os fluxos de material pendente, propriedade e associacao aos mecanismos de compartilhamento antes de implementar a API de materiais.
+O incremento seguinte de categorias foi implementado e esta documentado em [CATEGORIAS.md](CATEGORIAS.md). Antes da API de materiais, definir cadastro/publicacao, propriedade e associacao aos mecanismos de compartilhamento, sem relaxar a premissa BitTorrent.

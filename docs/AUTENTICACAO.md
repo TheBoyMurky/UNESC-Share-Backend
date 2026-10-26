@@ -1,6 +1,6 @@
-# Autenticacao — primeiro incremento
+# Autenticacao e perfil do usuario
 
-Este incremento implementa cadastro, login e consulta do usuario autenticado, sem avancar nos CRUDs academicos ou no compartilhamento de materiais.
+Este incremento implementa cadastro, login e consulta do usuario autenticado. A atualizacao de nome/e-mail e troca de senha estao descritas em [PERFIL_USUARIO.md](PERFIL_USUARIO.md).
 O UnescShare continua sendo um catalogo BitTorrent, sem hospedagem de conteudo academico.
 O incremento seguinte de instituicoes ja utiliza essa autenticacao; consulte [INSTITUICOES.md](INSTITUICOES.md) para contrato e permissoes aprovadas.
 
@@ -14,10 +14,12 @@ O incremento seguinte de instituicoes ja utiliza essa autenticacao; consulte [IN
 - Claims: `iss`, `aud`, `sub` (UUID), `iat`, `nbf`, `exp` e `roles`. Nenhuma senha, hash ou email no token. JWT e assinado, nao criptografado.
 - Sem revogacao individual imediata. Logout consiste em descartar o token no frontend, sem endpoint de logout. Uma copia do token permanece valida ate a expiracao.
 - Alteracoes de perfil nao atualizam tokens ja emitidos. Os testes comprovam a conversao nativa de roles, nao uma matriz de permissoes completa para funcionalidades ainda inexistentes.
+- O usuario autenticado pode atualizar nome/e-mail em `PUT /usuarios/me`; alterar o e-mail exige a senha atual. A troca de senha usa `PUT /usuarios/me/senha`, senha atual e nova senha, e persiste o hash pelo `PasswordEncoder`.
+- Troca de e-mail e imediata neste prototipo, sem verificacao por mensagem. JWTs existentes nao sao revogados apos alterar senha; permanecem validos ate a expiracao curta configurada.
 - `STATELESS`, sem sessao HTTP, cookie de autenticacao, Basic ou formulario de login. Tokens na query ou em cookies nao sao aceitos.
 - CSRF desativado porque as credenciais nao sao enviadas automaticamente por cookies/Basic. Essa decisao precisa ser revista se o mecanismo mudar. CORS nao substitui autenticacao e autorizacao.
 - Frontend deve enviar o token no header `Authorization`; preferir armazenamento em memoria neste prototipo. Uso fora de localhost requer HTTPS.
-- Rate limiting, recuperacao de senha e revogacao ainda nao foram implementados. O administrador inicial de desenvolvimento foi adicionado em um incremento separado, descrito em [ADMINISTRADOR_INICIAL.md](ADMINISTRADOR_INICIAL.md). Nao considerar estes incrementos suficientes para disponibilizacao publica em producao.
+- Rate limiting, recuperacao de senha, verificacao de e-mail e revogacao ainda nao foram implementados. O administrador inicial de desenvolvimento foi adicionado em um incremento separado, descrito em [ADMINISTRADOR_INICIAL.md](ADMINISTRADOR_INICIAL.md). Nao considerar estes incrementos suficientes para disponibilizacao publica em producao.
 
 ## Estrutura dos arquivos
 
@@ -33,9 +35,11 @@ Arquivos Java ficam sob `src/main/java/br/com/murkyweb/unesc_share/`:
 | [security/service/AuthService.java](../src/main/java/br/com/murkyweb/unesc_share/security/service/AuthService.java) | Autenticacao via `AuthenticationManager` e emissao via `JwtEncoder` |
 | [security/controller/AuthController.java](../src/main/java/br/com/murkyweb/unesc_share/security/controller/AuthController.java) | Endpoints de cadastro e login |
 | [usuario/dto/CadastroRequest.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/dto/CadastroRequest.java) | Entrada validada e normalizada do cadastro |
+| [usuario/dto/PerfilAtualizacaoRequest.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/dto/PerfilAtualizacaoRequest.java) | Entrada de nome/e-mail, senha atual condicional e credencial redigida |
+| [usuario/dto/AlterarSenhaRequest.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/dto/AlterarSenhaRequest.java) | Entrada validada e redigida da troca de senha |
 | [usuario/dto/UsuarioResponse.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/dto/UsuarioResponse.java) | Saida sem senha/hash |
-| [usuario/service/UsuarioService.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/service/UsuarioService.java) | Cadastro transacional e consulta do usuario atual |
-| [usuario/controller/UsuarioController.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/controller/UsuarioController.java) | Consulta de identidade derivada do JWT |
+| [usuario/service/UsuarioService.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/service/UsuarioService.java) | Cadastro, consulta e atualizacao transacional do usuario atual |
+| [usuario/controller/UsuarioController.java](../src/main/java/br/com/murkyweb/unesc_share/usuario/controller/UsuarioController.java) | Operacoes de identidade derivadas do JWT |
 | [shared/api/ApiExceptionHandler.java](../src/main/java/br/com/murkyweb/unesc_share/shared/api/ApiExceptionHandler.java) | Extensao do tratamento MVC nativo com `ProblemDetail` |
 
 Configuracoes alteradas: `pom.xml`, `.env.example`, `src/main/resources/application.properties` e `application-dev.properties`.
@@ -144,10 +148,11 @@ Ou apenas os testes deste incremento:
 
 ```bash
 ./mvnw -Dtest=AutenticacaoTests,JwtConfigTests test
+./mvnw -Dtest=UsuarioPerfilApiTests test
 ```
 
 Os testes HTTP passam pela cadeia real de filtros e usam JWTs assinados e decodificados pelos beans nativos, nao apenas autenticacao simulada.
-Cobrem cadastro/login ponta a ponta, normalizacao e duplicidade de email, hash, perfil fixo, validacao, identidade, expiracao, adulteracao, issuer/audience, ausencia de sessao, restricao de transporte, roles e CORS.
+Cobrem cadastro/login ponta a ponta, normalizacao e duplicidade de email, hash, perfil fixo, validacao, identidade, expiracao, adulteracao, issuer/audience, ausencia de sessao, restricao de transporte, roles, CORS, atualizacao de perfil/e-mail e reautenticacao para troca de e-mail/senha.
 As rotas administrativas de teste existem apenas no contexto de testes e nao sao incluidas no backend de producao.
 Os testes de integracao sao transacionais, revertem seus registros e nao acionam o runner. Continuam usando o PostgreSQL local de desenvolvimento e `ddl-auto=update`; nao ha banco isolado de testes neste incremento.
 

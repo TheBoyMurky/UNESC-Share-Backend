@@ -15,4 +15,8 @@ public interface MagnetRepository extends JpaRepository<Magnet, UUID> {
 	Optional<Magnet> findByInfoHashIgnoreCase(String infoHash);
 
 	boolean existsByInfoHashIgnoreCase(String infoHash);
+
+	boolean existsByMaterialId(UUID materialId);
+
+	long countByMaterialId(UUID materialId);
 }

@@ -1,11 +1,17 @@
 package br.com.murkyweb.unesc_share.material.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import br.com.murkyweb.unesc_share.material.domain.Material;
 import br.com.murkyweb.unesc_share.material.domain.StatusMaterial;
@@ -18,4 +24,12 @@ public interface MaterialRepository
 	Page<Material> findAllByUsuarioId(UUID usuarioId, Pageable pageable);
 
 	boolean existsByDisciplinaId(UUID disciplinaId);
+
+	boolean existsByCategoriaId(UUID categoriaId);
+
+	boolean existsByIdAndStatus(UUID id, StatusMaterial status);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select m from Material m where m.id = :id")
+	Optional<Material> buscarParaAtualizacao(@Param("id") UUID id);
 }
